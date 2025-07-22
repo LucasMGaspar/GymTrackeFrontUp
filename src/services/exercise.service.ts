@@ -1,6 +1,6 @@
 import { Exercise, CreateExerciseData, MUSCLE_GROUPS, MuscleGroup } from '@/types/exercise';
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'https://jcrw8tg1-3000.brs.devtunnels.ms';
 
 const getToken = () => localStorage.getItem('token');
 
