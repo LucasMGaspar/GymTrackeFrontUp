@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { Eye, EyeOff, Lock, Mail, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
@@ -23,8 +25,7 @@ export default function LoginPage() {
     try {
       await login({ email, password });
       router.push('/dashboard');
-    } catch (error: unknown) {
-      console.error('Erro no login:', error);
+    } catch (err: any) {
       setError('Email ou senha incorretos. Verifique suas credenciais e tente novamente.');
     } finally {
       setLoading(false);
@@ -32,15 +33,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-            <span className="text-2xl font-bold text-white">GT</span>
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+            <span className="text-lg sm:text-2xl font-bold text-white">GT</span>
           </div>
         </div>
-        <h1 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+        <h1 className="mt-4 sm:mt-6 text-center text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
           Gym Tracker
         </h1>
         <p className="mt-2 text-center text-sm text-gray-600">
@@ -49,11 +50,11 @@ export default function LoginPage() {
       </div>
 
       {/* Form Container */}
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 shadow-lg rounded-lg border border-gray-200 sm:px-10">
+      <div className="mt-6 sm:mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-6 px-4 sm:py-8 sm:px-6 lg:px-10 shadow-lg rounded-lg border border-gray-200">
           {/* Error Message */}
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
               <div className="flex">
                 <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
                 <div className="ml-3">
@@ -64,7 +65,7 @@ export default function LoginPage() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -83,7 +84,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu@email.com"
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-sm text-gray-900 bg-white placeholder-gray-400"
+                  className="block w-full pl-10 pr-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-sm sm:text-base text-gray-900 bg-white placeholder-gray-400"
                 />
               </div>
             </div>
@@ -106,7 +107,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Digite sua senha"
-                  className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-sm text-gray-900 bg-white placeholder-gray-400"
+                  className="block w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-sm sm:text-base text-gray-900 bg-white placeholder-gray-400"
                 />
                 <button
                   type="button"
@@ -123,7 +124,7 @@ export default function LoginPage() {
             </div>
 
             {/* Remember & Forgot Password */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
               <div className="flex items-center">
                 <input
                   id="remember-me"
@@ -147,7 +148,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              className="w-full flex justify-center py-2.5 sm:py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm sm:text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               {loading ? (
                 <div className="flex items-center">
@@ -160,8 +161,33 @@ export default function LoginPage() {
             </button>
           </form>
 
+          {/* Divider */}
+          <div className="mt-5 sm:mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Credenciais de teste</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Test Credentials */}
+          <div className="mt-5 sm:mt-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+              <div className="text-sm">
+                <p className="font-medium text-blue-900 mb-2">Para demonstração:</p>
+                <div className="space-y-1 text-blue-700">
+                  <p><span className="font-medium">Email:</span> teste@gymtracker.com</p>
+                  <p><span className="font-medium">Senha:</span> 123456</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Register Link */}
-          <div className="mt-6 text-center">
+          <div className="mt-5 sm:mt-6 text-center">
             <p className="text-sm text-gray-600">
               Não possui uma conta?{' '}
               <a 
@@ -176,7 +202,7 @@ export default function LoginPage() {
       </div>
 
       {/* Footer */}
-      <div className="mt-8 text-center">
+      <div className="mt-6 sm:mt-8 text-center">
         <p className="text-xs text-gray-500">
           © 2024 Gym Tracker. Todos os direitos reservados.
         </p>
