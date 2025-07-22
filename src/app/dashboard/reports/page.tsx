@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
@@ -9,12 +9,10 @@ import { exerciseService } from '@/services/exercise.service';
 import HydrationWrapper from '@/components/ui/HydrationWrapper';
 import { 
   BarChart3, 
-  TrendingUp, 
-  Calendar,
+  TrendingUp,
   Activity,
   User,
   LogOut,
-  ChevronRight,
   Target,
   Trophy,
   Dumbbell,
@@ -25,6 +23,7 @@ import {
   Minus,
   ArrowLeft
 } from 'lucide-react';
+import { Exercise } from '@/types/exercise';
 
 interface WorkoutOverview {
   period: { startDate: string; endDate: string };
@@ -87,17 +86,7 @@ function ReportsContent() {
     endDate: ''
   });
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
-
-    loadInitialData();
-    loadExercises();
-  }, [isAuthenticated, router]);
-
-  const loadInitialData = async () => {
+  const loadInitialData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -113,32 +102,44 @@ function ReportsContent() {
       
       setOverview(overviewData);
       setRecords(recordsData || []);
-    } catch (err: any) {
-      console.error('❌ Erro detalhado:', err);
+    } catch (error: unknown) {
+      console.error('❌ Erro detalhado:', error);
       
-      if (err.message?.includes('401') || err.message?.includes('Unauthorized')) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      
+      if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
         setError('Sessão expirada. Faça login novamente.');
         // Redirecionar para login após 3 segundos
         setTimeout(() => {
           router.push('/login');
         }, 3000);
       } else {
-        setError('Erro ao carregar dados dos relatórios: ' + (err.message || 'Erro desconhecido'));
+        setError('Erro ao carregar dados dos relatórios: ' + errorMessage);
       }
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateRange, router]);
 
-  const loadExercises = async () => {
+  const loadExercises = useCallback(async () => {
     try {
       const exercisesData = await exerciseService.getAll();
-      setExercises(exercisesData?.map((ex: any) => ({ id: ex.id, name: ex.name })) || []);
-    } catch (err) {
-      console.error('Erro ao carregar exercícios:', err);
+      setExercises(exercisesData?.map((ex: Exercise) => ({ id: ex.id, name: ex.name })) || []);
+    } catch (error) {
+      console.error('Erro ao carregar exercícios:', error);
       setExercises([]);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
+    loadInitialData();
+    loadExercises();
+  }, [isAuthenticated, router, loadInitialData, loadExercises]);
 
   const loadExerciseEvolution = async (exerciseId: string) => {
     try {
@@ -151,9 +152,9 @@ function ReportsContent() {
         }
       );
       setEvolution(evolutionData);
-    } catch (err) {
+    } catch (error) {
       setError('Erro ao carregar evolução do exercício');
-      console.error('Erro:', err);
+      console.error('Erro:', error);
     } finally {
       setLoading(false);
     }

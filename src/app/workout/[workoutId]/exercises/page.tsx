@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { workoutService } from '@/services/workout.service';
 import { Exercise } from '@/types/exercise';
 import { WorkoutExecution } from '@/types/workout';
-import { 
+import {
   ArrowLeft,
   Search,
   Filter,
@@ -20,7 +20,7 @@ import {
   Play,
   Plus,
   Info,
-  Clock
+  Clock,
 } from 'lucide-react';
 
 export default function SelectExercisesPage() {
@@ -37,23 +37,10 @@ export default function SelectExercisesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterMuscle, setFilterMuscle] = useState<string>('');
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
-
-    loadWorkoutData();
-  }, [isAuthenticated, workoutId, router]);
-
-  useEffect(() => {
-    filterExercises();
-  }, [availableExercises, searchTerm, filterMuscle]);
-
-  const loadWorkoutData = async () => {
+  const loadWorkoutData = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       const [workoutDetails, exercises] = await Promise.all([
         workoutService.getWorkoutDetails(workoutId),
         workoutService.getAvailableExercises(workoutId),
@@ -68,34 +55,43 @@ export default function SelectExercisesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router, workoutId]);
 
-  const filterExercises = () => {
+  const filterExercises = useCallback(() => {
     let filtered = availableExercises;
 
     if (searchTerm) {
-      filtered = filtered.filter(exercise =>
-        exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        exercise.muscleGroups.some(muscle => 
-          muscle.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        exercise =>
+          exercise.name.toLowerCase().includes(term) ||
+          exercise.muscleGroups.some(muscle => muscle.toLowerCase().includes(term)),
       );
     }
 
     if (filterMuscle) {
-      filtered = filtered.filter(exercise =>
-        exercise.muscleGroups.includes(filterMuscle)
-      );
+      filtered = filtered.filter(exercise => exercise.muscleGroups.includes(filterMuscle));
     }
 
     setFilteredExercises(filtered);
-  };
+  }, [availableExercises, searchTerm, filterMuscle]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
+    loadWorkoutData();
+  }, [isAuthenticated, router, loadWorkoutData]);
+
+  useEffect(() => {
+    filterExercises();
+  }, [filterExercises]);
 
   const handleExerciseToggle = (exerciseId: string) => {
-    setSelectedExercises(prev => 
-      prev.includes(exerciseId)
-        ? prev.filter(id => id !== exerciseId)
-        : [...prev, exerciseId]
+    setSelectedExercises(prev =>
+      prev.includes(exerciseId) ? prev.filter(id => id !== exerciseId) : [...prev, exerciseId],
     );
   };
 
@@ -115,7 +111,7 @@ export default function SelectExercisesPage() {
 
     try {
       setLoading(true);
-      
+
       await workoutService.selectExercises(workoutId, {
         exerciseIds: selectedExercises,
       });
@@ -135,11 +131,12 @@ export default function SelectExercisesPage() {
   };
 
   const getExerciseIcon = (exercise: Exercise) => {
-    if (exercise.equipment?.toLowerCase().includes('halteres')) return '🏋️';
-    if (exercise.equipment?.toLowerCase().includes('barra')) return '🥇';
-    if (exercise.equipment?.toLowerCase().includes('cabo')) return '🔗';
-    if (exercise.equipment?.toLowerCase().includes('máquina')) return '⚙️';
-    if (!exercise.equipment || exercise.equipment.toLowerCase().includes('corpo')) return '💪';
+    const eq = exercise.equipment?.toLowerCase() || '';
+    if (eq.includes('halter')) return '🏋️';
+    if (eq.includes('barra')) return '🥇';
+    if (eq.includes('cabo')) return '🔗';
+    if (eq.includes('máquina')) return '⚙️';
+    if (!eq || eq.includes('corpo')) return '💪';
     return '🏋️';
   };
 
@@ -161,8 +158,8 @@ export default function SelectExercisesPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 size="sm"
                 onClick={() => router.back()}
                 className="flex items-center space-x-2"
@@ -185,26 +182,11 @@ export default function SelectExercisesPage() {
         {/* Progress Indicator */}
         <div className="flex items-center justify-center mb-8">
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                <CheckCircle2 className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-sm font-medium text-green-600">Configurar</span>
-            </div>
+            <ProgressStep done label="Configurar" number={1} />
             <div className="w-12 h-0.5 bg-green-500"></div>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">2</span>
-              </div>
-              <span className="text-sm font-medium text-blue-600">Exercícios</span>
-            </div>
+            <ProgressStep current label="Exercícios" number={2} />
             <div className="w-12 h-0.5 bg-gray-300"></div>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                <span className="text-gray-600 text-sm font-medium">3</span>
-              </div>
-              <span className="text-sm text-gray-500">Executar</span>
-            </div>
+            <ProgressStep label="Executar" number={3} />
           </div>
         </div>
 
@@ -217,11 +199,12 @@ export default function SelectExercisesPage() {
                   <Calendar className="h-6 w-6 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    {workout.dayOfWeek}
-                  </h2>
+                  <h2 className="text-xl font-semibold text-gray-900">{workout.dayOfWeek}</h2>
                   <p className="text-blue-700 font-medium">
-                    Músculos: {Array.isArray(workout.muscleGroups) ? workout.muscleGroups.join(', ') : 'N/A'}
+                    Músculos:{' '}
+                    {Array.isArray(workout.muscleGroups)
+                      ? workout.muscleGroups.join(', ')
+                      : 'N/A'}
                   </p>
                 </div>
               </div>
@@ -243,18 +226,16 @@ export default function SelectExercisesPage() {
                 <Filter className="h-4 w-4" />
                 <span>Filtros</span>
               </h3>
-              
+
               {/* Search */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Buscar
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={e => setSearchTerm(e.target.value)}
                     placeholder="Nome do exercício..."
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -263,17 +244,17 @@ export default function SelectExercisesPage() {
 
               {/* Muscle Filter */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Grupo Muscular
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Grupo Muscular</label>
                 <select
                   value={filterMuscle}
-                  onChange={(e) => setFilterMuscle(e.target.value)}
+                  onChange={e => setFilterMuscle(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Todos</option>
                   {getUniqueAcMuscleGroups().map(muscle => (
-                    <option key={muscle} value={muscle}>{muscle}</option>
+                    <option key={muscle} value={muscle}>
+                      {muscle}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -286,17 +267,18 @@ export default function SelectExercisesPage() {
                   onClick={handleSelectAll}
                   className="w-full justify-center"
                 >
-                  {selectedExercises.length === filteredExercises.length ? 'Desmarcar Todos' : 'Selecionar Todos'}
+                  {selectedExercises.length === filteredExercises.length
+                    ? 'Desmarcar Todos'
+                    : 'Selecionar Todos'}
                 </Button>
-                
+
                 {selectedExercises.length > 0 && (
                   <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                     <div className="text-sm font-medium text-green-900 mb-1">
-                      {selectedExercises.length} selecionado{selectedExercises.length > 1 ? 's' : ''}
+                      {selectedExercises.length} selecionado
+                      {selectedExercises.length > 1 ? 's' : ''}
                     </div>
-                    <div className="text-xs text-green-700">
-                      Pronto para começar o treino!
-                    </div>
+                    <div className="text-xs text-green-700">Pronto para começar o treino!</div>
                   </div>
                 )}
               </div>
@@ -308,11 +290,11 @@ export default function SelectExercisesPage() {
             <div className="bg-white rounded-xl shadow-sm border p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Exercícios Disponíveis
-                  </h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Exercícios Disponíveis</h3>
                   <p className="text-sm text-gray-600">
-                    {filteredExercises.length} exercício{filteredExercises.length !== 1 ? 's' : ''} encontrado{filteredExercises.length !== 1 ? 's' : ''}
+                    {filteredExercises.length} exercício
+                    {filteredExercises.length !== 1 ? 's' : ''} encontrado
+                    {filteredExercises.length !== 1 ? 's' : ''}
                   </p>
                 </div>
                 <Button
@@ -328,18 +310,19 @@ export default function SelectExercisesPage() {
 
               {filteredExercises.length > 0 ? (
                 <div className="grid gap-4">
-                  {filteredExercises.map((exercise) => {
+                  {filteredExercises.map(exercise => {
                     const isSelected = selectedExercises.includes(exercise.id);
-                    
+
                     return (
                       <div
                         key={exercise.id}
                         onClick={() => handleExerciseToggle(exercise.id)}
                         className={`
                           p-5 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:scale-[1.02] group
-                          ${isSelected
-                            ? 'border-blue-500 bg-blue-50 shadow-md'
-                            : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                          ${
+                            isSelected
+                              ? 'border-blue-500 bg-blue-50 shadow-md'
+                              : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
                           }
                         `}
                       >
@@ -347,7 +330,11 @@ export default function SelectExercisesPage() {
                           <div className="flex items-center space-x-4 flex-1">
                             <div className="text-3xl">{getExerciseIcon(exercise)}</div>
                             <div className="flex-1 min-w-0">
-                              <h4 className={`font-semibold ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
+                              <h4
+                                className={`font-semibold ${
+                                  isSelected ? 'text-blue-900' : 'text-gray-900'
+                                }`}
+                              >
                                 {exercise.name}
                               </h4>
                               <div className="flex items-center space-x-4 mt-2">
@@ -368,13 +355,16 @@ export default function SelectExercisesPage() {
                               </div>
                             </div>
                           </div>
-                          <div className={`
+                          <div
+                            className={`
                             w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors
-                            ${isSelected
-                              ? 'border-blue-500 bg-blue-500'
-                              : 'border-gray-300 group-hover:border-blue-400'
+                            ${
+                              isSelected
+                                ? 'border-blue-500 bg-blue-500'
+                                : 'border-gray-300 group-hover:border-blue-400'
                             }
-                          `}>
+                          `}
+                          >
                             {isSelected ? (
                               <CheckCircle2 className="h-4 w-4 text-white" />
                             ) : (
@@ -395,12 +385,11 @@ export default function SelectExercisesPage() {
                     {searchTerm || filterMuscle ? 'Nenhum exercício encontrado' : 'Nenhum exercício disponível'}
                   </h4>
                   <p className="text-gray-600 mb-6">
-                    {searchTerm || filterMuscle 
+                    {searchTerm || filterMuscle
                       ? 'Tente ajustar os filtros de busca.'
-                      : 'Cadastre exercícios para os grupos musculares selecionados.'
-                    }
+                      : 'Cadastre exercícios para os grupos musculares selecionados.'}
                   </p>
-                  <Button 
+                  <Button
                     variant="secondary"
                     onClick={() => router.push('/exercises')}
                     className="flex items-center space-x-2"
@@ -418,13 +407,15 @@ export default function SelectExercisesPage() {
                     <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
                     <div className="flex-1">
                       <p className="text-sm font-medium text-green-900 mb-2">
-                        {selectedExercises.length} exercício{selectedExercises.length > 1 ? 's' : ''} selecionado{selectedExercises.length > 1 ? 's' : ''}
+                        {selectedExercises.length} exercício
+                        {selectedExercises.length > 1 ? 's' : ''} selecionado
+                        {selectedExercises.length > 1 ? 's' : ''}
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {selectedExercises.map(id => {
                           const exercise = availableExercises.find(e => e.id === id);
                           return exercise ? (
-                            <span 
+                            <span
                               key={id}
                               className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                             >
@@ -459,7 +450,7 @@ export default function SelectExercisesPage() {
                   </>
                 )}
               </Button>
-              
+
               {selectedExercises.length === 0 && (
                 <p className="text-sm text-gray-500 mt-3 flex items-center justify-center space-x-1">
                   <Info className="h-4 w-4" />
@@ -470,13 +461,59 @@ export default function SelectExercisesPage() {
               {selectedExercises.length > 0 && (
                 <p className="text-sm text-green-600 mt-3 flex items-center justify-center space-x-1">
                   <Clock className="h-4 w-4" />
-                  <span>Tempo estimado: {selectedExercises.length * 8}-{selectedExercises.length * 12} minutos</span>
+                  <span>
+                    Tempo estimado: {selectedExercises.length * 8}-{selectedExercises.length * 12}{' '}
+                    minutos
+                  </span>
                 </p>
               )}
             </div>
           </div>
         </div>
       </main>
+    </div>
+  );
+}
+
+function ProgressStep({
+  done,
+  current,
+  label,
+  number,
+}: {
+  done?: boolean;
+  current?: boolean;
+  label: string;
+  number: number;
+}) {
+  if (done) {
+    return (
+      <div className="flex items-center space-x-2">
+        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+          <CheckCircle2 className="h-4 w-4 text-white" />
+        </div>
+        <span className="text-sm font-medium text-green-600">{label}</span>
+      </div>
+    );
+  }
+
+  if (current) {
+    return (
+      <div className="flex items-center space-x-2">
+        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+          <span className="text-white text-sm font-medium">{number}</span>
+        </div>
+        <span className="text-sm font-medium text-blue-600">{label}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center space-x-2">
+      <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+        <span className="text-gray-600 text-sm font-medium">{number}</span>
+      </div>
+      <span className="text-sm text-gray-500">{label}</span>
     </div>
   );
 }

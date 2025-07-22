@@ -11,6 +11,22 @@ function getAuthHeader() {
   return { Authorization: `Bearer ${token}` };
 }
 
+// Interface para dados de exercícios
+interface ExerciseData {
+  weight?: number;
+  reps?: number;
+  volume?: number;
+  date: string;
+}
+
+// Interface para melhorias
+interface ImprovementData {
+  percentage: number;
+  difference: number;
+  initialValue: number;
+  currentValue: number;
+}
+
 // Interfaces para tipagem
 export interface WorkoutOverview {
   period: { startDate: string; endDate: string };
@@ -155,19 +171,14 @@ export interface ExerciseComparison {
     exerciseId: string;
     exerciseName: string;
     totalSessions: number;
-    latestData: any;
-    firstData: any;
-    improvement: {
-      difference: number;
-      percentage: number;
-      initialValue: number;
-      currentValue: number;
-    };
+    latestData: ExerciseData;
+    firstData: ExerciseData;
+    improvement: ImprovementData;
   }>;
   ranking: Array<{
     position: number;
     exerciseName: string;
-    improvement: any;
+    improvement: ImprovementData;
   }>;
 }
 
@@ -193,6 +204,19 @@ export interface StrengthAnalysis {
     totalExercises: number;
     overallStrengthTrend: 'strong_improvement' | 'improvement' | 'stable' | 'decline' | 'no_data';
   };
+}
+
+// Interface para o relatório completo
+export interface CompleteReport {
+  overview: WorkoutOverview;
+  exerciseProgress: ExerciseProgress[];
+  frequency: WorkoutFrequency;
+  muscleGroups: MuscleGroupAnalysis;
+  volume: VolumeAnalysis;
+  records: PersonalRecord[];
+  duration: WorkoutDuration;
+  consistency: WorkoutConsistency;
+  generatedAt: string;
 }
 
 export const ReportsService = {
@@ -468,7 +492,7 @@ export const ReportsService = {
   async getCompleteReport(
     format: 'json' | 'summary' = 'summary',
     dateRange?: { startDate?: string; endDate?: string }
-  ): Promise<any> {
+  ): Promise<CompleteReport> {
     try {
       const params = new URLSearchParams();
       params.append('format', format);

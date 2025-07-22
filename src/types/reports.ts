@@ -83,6 +83,22 @@ export interface ExerciseEvolution {
   };
 }
 
+// Interface para dados de exercícios
+export interface ExerciseData {
+  weight?: number;
+  reps?: number;
+  volume?: number;
+  date: string;
+}
+
+// Interface para melhorias
+export interface ImprovementData {
+  percentage: number;
+  difference: number;
+  initialValue: number;
+  currentValue: number;
+}
+
 export interface ExerciseComparison {
   metric: string;
   period: {
@@ -93,19 +109,14 @@ export interface ExerciseComparison {
     exerciseId: string;
     exerciseName: string;
     totalSessions: number;
-    improvement: {
-      difference: number;
-      percentage: number;
-      initialValue: number;
-      currentValue: number;
-    };
+    latestData: ExerciseData;
+    firstData: ExerciseData;
+    improvement: ImprovementData;
   }>;
   ranking: Array<{
     position: number;
     exerciseName: string;
-    improvement: {
-      percentage: number;
-    };
+    improvement: ImprovementData;
   }>;
 }
 
@@ -205,14 +216,51 @@ export interface StrengthAnalysis {
   };
 }
 
+export interface WorkoutDuration {
+  data: Array<{
+    date: string;
+    duration: number;
+    dayOfWeek: string;
+  }>;
+  summary: {
+    average: number;
+    shortest: number;
+    longest: number;
+    total: number;
+  };
+}
+
+export interface ExerciseProgress {
+  exerciseId: string;
+  exerciseName: string;
+  sessions: Array<{
+    date: string;
+    series: number;
+    maxWeight: number;
+    maxReps: number;
+    volume: number;
+    seriesData: Array<{
+      weight: number;
+      reps: number;
+      difficulty: number;
+    }>;
+  }>;
+  progress: {
+    maxWeight: number;
+    maxReps: number;
+    maxVolume: number;
+    totalSeries: number;
+  };
+}
+
 export interface CompleteReport {
   overview: WorkoutOverview;
-  exerciseProgress: any[];
+  exerciseProgress: ExerciseProgress[];
   frequency: WorkoutFrequency;
   muscleGroups: MuscleGroupAnalysis;
   volume: VolumeAnalysis;
   records: PersonalRecord[];
-  duration: any;
+  duration: WorkoutDuration;
   consistency: WorkoutConsistency;
   generatedAt: string;
 }

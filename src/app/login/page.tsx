@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { Eye, EyeOff, Lock, Mail, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
@@ -25,7 +23,8 @@ export default function LoginPage() {
     try {
       await login({ email, password });
       router.push('/dashboard');
-    } catch (err: any) {
+    } catch (error: unknown) {
+      console.error('Erro no login:', error);
       setError('Email ou senha incorretos. Verifique suas credenciais e tente novamente.');
     } finally {
       setLoading(false);

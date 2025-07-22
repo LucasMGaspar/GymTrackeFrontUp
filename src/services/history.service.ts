@@ -83,7 +83,7 @@ export class HistoryService {
 
   private static async fetchWithParams<T>(
     endpoint: string,
-    params?: Record<string, any>,
+    params?: Record<string, unknown>,
   ): Promise<T> {
     const url = new URL(`${API_BASE_URL}/history/${endpoint}`);
     if (params) {
@@ -106,8 +106,18 @@ export class HistoryService {
     return response.json();
   }
 
-  static async getWorkoutHistory(filters?: HistoryFilters) {
-    const cleanFilters: Record<string, any> = {};
+  static async getWorkoutHistory(filters?: HistoryFilters): Promise<{
+    data: WorkoutHistoryItem[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }> {
+    const cleanFilters: Record<string, unknown> = {};
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
@@ -118,7 +128,49 @@ export class HistoryService {
     return this.fetchWithParams('', cleanFilters);
   }
 
-  static async getWorkoutDetails(workoutId: string) {
+  static async getWorkoutDetails(workoutId: string): Promise<{
+    id: string;
+    date: string;
+    dayOfWeek: string;
+    muscleGroups: string[];
+    status: 'COMPLETED' | 'CANCELLED' | 'IN_PROGRESS';
+    startTime: string;
+    endTime?: string;
+    notes?: string;
+    exerciseExecutions: Array<{
+      id: string;
+      exerciseName: string;
+      order: number;
+      isCompleted: boolean;
+      plannedSeries: number;
+      completedSeries: number;
+      exercise: {
+        id: string;
+        name: string;
+        muscleGroups: string[];
+        equipment?: string;
+        instructions?: string;
+      };
+      seriesExecutions: Array<{
+        id: string;
+        seriesNumber: number;
+        weight: number;
+        reps: number;
+        restTime?: number;
+        difficulty?: number;
+        notes?: string;
+      }>;
+    }>;
+    stats: {
+      totalExercises: number;
+      completedExercises: number;
+      totalSeries: number;
+      totalVolume: number;
+      averageWeight: number;
+      averageReps: number;
+      duration: number;
+    };
+  }> {
     const response = await fetch(`${API_BASE_URL}/history/${workoutId}`, {
       headers: this.getAuthHeader(),
     });
@@ -132,19 +184,19 @@ export class HistoryService {
     period: 'week' | 'month' | 'year' | 'all' = 'month',
     startDate?: string,
     endDate?: string,
-  ) {
+  ): Promise<HistoryStats> {
     return this.fetchWithParams('stats/overview', { period, startDate, endDate });
   }
 
-  static async getWeeklyPattern(startDate?: string, endDate?: string) {
+  static async getWeeklyPattern(startDate?: string, endDate?: string): Promise<WeeklyPattern[]> {
     return this.fetchWithParams('stats/weekly-pattern', { startDate, endDate });
   }
 
-  static async getMuscleGroupStats(startDate?: string, endDate?: string) {
+  static async getMuscleGroupStats(startDate?: string, endDate?: string): Promise<MuscleGroupStat[]> {
     return this.fetchWithParams('stats/muscle-groups', { startDate, endDate });
   }
 
-  static async deleteWorkout(workoutId: string) {
+  static async deleteWorkout(workoutId: string): Promise<{ success: boolean; message: string }> {
     const response = await fetch(`${API_BASE_URL}/history/${workoutId}`, {
       method: 'DELETE',
       headers: {
@@ -158,7 +210,7 @@ export class HistoryService {
     return response.json();
   }
 
-  static async duplicateWorkout(workoutId: string) {
+  static async duplicateWorkout(workoutId: string): Promise<{ id: string }> {
     return this.fetchWithParams(`${workoutId}/duplicate`);
   }
 }

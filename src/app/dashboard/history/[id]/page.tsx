@@ -1,16 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { HistoryService } from '@/services/history.service';
 import HydrationWrapper from '@/components/ui/HydrationWrapper';
 import { 
-  Calendar,
   Clock,
   Target,
-  TrendingUp,
   Activity,
   User,
   LogOut,
@@ -21,8 +19,6 @@ import {
   Pause,
   BarChart3,
   Dumbbell,
-  PlayCircle,
-  Edit,
   Copy,
   Trash2,
   Timer,
@@ -86,6 +82,21 @@ function WorkoutDetailsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const loadWorkoutDetails = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await HistoryService.getWorkoutDetails(workoutId);
+      setWorkout(data);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar detalhes do treino';
+      setError(errorMessage);
+      console.error('Erro:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [workoutId]);
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.push('/login');
@@ -95,21 +106,7 @@ function WorkoutDetailsContent() {
     if (workoutId) {
       loadWorkoutDetails();
     }
-  }, [isAuthenticated, router, workoutId]);
-
-  const loadWorkoutDetails = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await HistoryService.getWorkoutDetails(workoutId);
-      setWorkout(data);
-    } catch (err) {
-      setError('Erro ao carregar detalhes do treino');
-      console.error('Erro:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [isAuthenticated, router, workoutId, loadWorkoutDetails]);
 
   const handleDuplicateWorkout = async () => {
     if (!workout) return;
@@ -118,8 +115,9 @@ function WorkoutDetailsContent() {
       const result = await HistoryService.duplicateWorkout(workout.id);
       alert('Treino duplicado com sucesso!');
       router.push(`/workout/${result.id}/exercises`);
-    } catch (err: any) {
-      alert(err.message || 'Erro ao duplicar treino');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao duplicar treino';
+      alert(errorMessage);
     }
   };
 
@@ -132,8 +130,9 @@ function WorkoutDetailsContent() {
       await HistoryService.deleteWorkout(workout.id);
       alert('Treino deletado com sucesso!');
       router.push('/dashboard/history');
-    } catch (err) {
-      alert('Erro ao deletar treino');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao deletar treino';
+      alert(errorMessage);
     }
   };
 
@@ -363,7 +362,7 @@ function WorkoutDetailsContent() {
                 <MessageCircle className="h-5 w-5 text-gray-400 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-gray-700">Observações:</p>
-                  <p className="text-sm text-gray-600 italic">"{workout.notes}"</p>
+                  <p className="text-sm text-gray-600 italic">&ldquo;{workout.notes}&rdquo;</p>
                 </div>
               </div>
             </div>
@@ -548,7 +547,7 @@ function WorkoutDetailsContent() {
                           .filter(s => s.notes)
                           .map((series) => (
                           <div key={`notes-${series.id}`} className="text-sm text-gray-600 italic mb-1">
-                            Série {series.seriesNumber}: "{series.notes}"
+                            Série {series.seriesNumber}: &ldquo;{series.notes}&rdquo;
                           </div>
                         ))}
                       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
@@ -19,7 +19,6 @@ import {
   Trash2,
   Copy,
   Eye,
-  MoreVertical,
   CheckCircle,
   XCircle,
   Pause,
@@ -69,18 +68,7 @@ export default function HistoryPage() {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (!mounted) return;
-    
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
-
-    loadHistoryData();
-  }, [mounted, isAuthenticated, router, currentPage, filters]);
-
-  const loadHistoryData = async () => {
+  const loadHistoryData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -101,13 +89,25 @@ export default function HistoryPage() {
       setStats(statsData);
       setWeeklyPattern(weeklyData);
       setMuscleGroupStats(muscleData.slice(0, 5)); // Top 5
-    } catch (err) {
-      setError('Erro ao carregar histórico');
-      console.error('Erro:', err);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar histórico';
+      setError(errorMessage);
+      console.error('Erro:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, filters]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
+    loadHistoryData();
+  }, [mounted, isAuthenticated, router, loadHistoryData]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -120,8 +120,9 @@ export default function HistoryPage() {
     try {
       await HistoryService.deleteWorkout(workoutId);
       loadHistoryData(); // Recarregar dados
-    } catch (err) {
-      alert('Erro ao deletar treino');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao deletar treino';
+      alert(errorMessage);
     }
   };
 
@@ -130,8 +131,9 @@ export default function HistoryPage() {
       const result = await HistoryService.duplicateWorkout(workoutId);
       alert('Treino duplicado com sucesso!');
       router.push(`/workout/${result.id}/exercises`);
-    } catch (err: any) {
-      alert(err.message || 'Erro ao duplicar treino');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao duplicar treino';
+      alert(errorMessage);
     }
   };
 
@@ -490,7 +492,7 @@ export default function HistoryPage() {
 
                   {workout.notes && (
                     <div className="mt-3 px-16">
-                      <p className="text-sm text-gray-600 italic">"{workout.notes}"</p>
+                      <p className="text-sm text-gray-600 italic">&ldquo;{workout.notes}&rdquo;</p>
                     </div>
                   )}
                 </div>
