@@ -1,4 +1,5 @@
-const API_BASE_URL =  'https://jcrw8tg1-3000.brs.devtunnels.ms';
+// src/services/history.service.ts
+import api from '@/lib/api';
 
 export interface HistoryFilters {
   page?: number;
@@ -73,39 +74,21 @@ export interface MuscleGroupStat {
 }
 
 export class HistoryService {
-  private static getAuthHeader() {
-    const token = localStorage.getItem('token');  // ← USAR 'token'
-    if (!token) {
-      throw new Error('Usuário não autenticado');
-    }
-    return { Authorization: `Bearer ${token}` };
-  }
-
-  private static async fetchWithParams<T>(
-    endpoint: string,
-    params?: Record<string, unknown>,
-  ): Promise<T> {
-    const url = new URL(`${API_BASE_URL}/history/${endpoint}`);
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          url.searchParams.append(key, value.toString());
-        }
-      });
-    }
-
-    const response = await fetch(url.toString(), {
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.getAuthHeader(),
-      },
+  // ✅ CORREÇÃO: Função auxiliar para construir parâmetros de query
+  private static buildQueryString(params: Record<string, unknown>): string {
+    const searchParams = new URLSearchParams();
+    
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        searchParams.append(key, value.toString());
+      }
     });
-    if (!response.ok) {
-      throw new Error(`Erro na API: ${response.status} ${response.statusText}`);
-    }
-    return response.json();
+    
+    const queryString = searchParams.toString();
+    return queryString ? `?${queryString}` : '';
   }
 
+  // ✅ CORREÇÃO: Buscar histórico de treinos
   static async getWorkoutHistory(filters?: HistoryFilters): Promise<{
     data: WorkoutHistoryItem[];
     pagination: {
@@ -117,17 +100,27 @@ export class HistoryService {
       hasPrev: boolean;
     };
   }> {
-    const cleanFilters: Record<string, unknown> = {};
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          cleanFilters[key] = value;
-        }
-      });
+    try {
+      const cleanFilters: Record<string, unknown> = {};
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== '') {
+            cleanFilters[key] = value;
+          }
+        });
+      }
+
+      const queryString = this.buildQueryString(cleanFilters);
+      const response = await api.get(`/history${queryString}`);
+      
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar histórico:', error);
+      throw error;
     }
-    return this.fetchWithParams('', cleanFilters);
   }
 
+  // ✅ CORREÇÃO: Buscar detalhes do treino
   static async getWorkoutDetails(workoutId: string): Promise<{
     id: string;
     date: string;
@@ -171,46 +164,89 @@ export class HistoryService {
       duration: number;
     };
   }> {
-    const response = await fetch(`${API_BASE_URL}/history/${workoutId}`, {
-      headers: this.getAuthHeader(),
-    });
-    if (!response.ok) {
-      throw new Error(`Erro ao buscar detalhes: ${response.statusText}`);
+    try {
+      const response = await api.get(`/history/${workoutId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar detalhes do treino:', error);
+      throw error;
     }
-    return response.json();
   }
 
+  // ✅ CORREÇÃO: Buscar estatísticas do histórico
   static async getHistoryStats(
     period: 'week' | 'month' | 'year' | 'all' = 'month',
     startDate?: string,
     endDate?: string,
   ): Promise<HistoryStats> {
-    return this.fetchWithParams('stats/overview', { period, startDate, endDate });
-  }
-
-  static async getWeeklyPattern(startDate?: string, endDate?: string): Promise<WeeklyPattern[]> {
-    return this.fetchWithParams('stats/weekly-pattern', { startDate, endDate });
-  }
-
-  static async getMuscleGroupStats(startDate?: string, endDate?: string): Promise<MuscleGroupStat[]> {
-    return this.fetchWithParams('stats/muscle-groups', { startDate, endDate });
-  }
-
-  static async deleteWorkout(workoutId: string): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(`${API_BASE_URL}/history/${workoutId}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.getAuthHeader(),
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`Erro ao deletar treino: ${response.statusText}`);
+    try {
+      const params: Record<string, unknown> = { period };
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+      
+      const queryString = this.buildQueryString(params);
+      const response = await api.get(`/history/stats/overview${queryString}`);
+      
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas do histórico:', error);
+      throw error;
     }
-    return response.json();
   }
 
-  static async duplicateWorkout(workoutId: string): Promise<{ id: string }> {
-    return this.fetchWithParams(`${workoutId}/duplicate`);
+  // ✅ CORREÇÃO: Buscar padrão semanal
+  static async getWeeklyPattern(startDate?: string, endDate?: string): Promise<WeeklyPattern[]> {
+    try {
+      const params: Record<string, unknown> = {};
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+      
+      const queryString = this.buildQueryString(params);
+      const response = await api.get(`/history/stats/weekly-pattern${queryString}`);
+      
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar padrão semanal:', error);
+      throw error;
+    }
+  }
+
+  // ✅ CORREÇÃO: Buscar estatísticas dos grupos musculares
+  static async getMuscleGroupStats(startDate?: string, endDate?: string): Promise<MuscleGroupStat[]> {
+    try {
+      const params: Record<string, unknown> = {};
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+      
+      const queryString = this.buildQueryString(params);
+      const response = await api.get(`/history/stats/muscle-groups${queryString}`);
+      
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas dos grupos musculares:', error);
+      throw error;
+    }
+  }
+
+  // ✅ CORREÇÃO: Deletar treino
+  static async deleteWorkout(workoutId: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await api.delete(`/history/${workoutId}`);
+      return response.data || { success: true, message: 'Treino deletado com sucesso' };
+    } catch (error) {
+      console.error('Erro ao deletar treino:', error);
+      throw error;
+    }
+  }
+
+  // ✅ CORREÇÃO: Duplicar treino
+  static async duplicateWorkout(workoutId: string): Promise<{ id: string; message: string; newWorkout: any }> {
+    try {
+      const response = await api.get(`/history/${workoutId}/duplicate`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao duplicar treino:', error);
+      throw error;
+    }
   }
 }
