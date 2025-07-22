@@ -161,30 +161,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="mt-5 sm:mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Credenciais de teste</span>
-              </div>
-            </div>
-          </div>
 
-          {/* Test Credentials */}
-          <div className="mt-5 sm:mt-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
-              <div className="text-sm">
-                <p className="font-medium text-blue-900 mb-2">Para demonstração:</p>
-                <div className="space-y-1 text-blue-700">
-                  <p><span className="font-medium">Email:</span> teste@gymtracker.com</p>
-                  <p><span className="font-medium">Senha:</span> 123456</p>
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Register Link */}
           <div className="mt-5 sm:mt-6 text-center">
