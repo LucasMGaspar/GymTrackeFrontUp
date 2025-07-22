@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'gymtrackebackfinal-production-7b40.up.railway.app',
+  baseURL: 'https://gymtrackebackfinal-production-7b40.up.railway.app',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
