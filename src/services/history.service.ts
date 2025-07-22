@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL =  'https://jcrw8tg1-3000.brs.devtunnels.ms';
 
 export interface HistoryFilters {
   page?: number;
