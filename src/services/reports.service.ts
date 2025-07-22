@@ -1,16 +1,6 @@
 // src/services/reports.service.ts
 import api from '@/lib/api';
 
-function getAuthHeader() {
-  const token = localStorage.getItem('access_token');
-  if (!token) {
-    console.error('❌ Token não encontrado no localStorage');
-    throw new Error('Usuário não autenticado');
-  }
-  console.log('🔑 Token encontrado:', token.substring(0, 20) + '...');
-  return { Authorization: `Bearer ${token}` };
-}
-
 // Interface para dados de exercícios
 interface ExerciseData {
   weight?: number;
@@ -230,10 +220,7 @@ export const ReportsService = {
       const queryString = params.toString();
       const url = `/reports/overview${queryString ? `?${queryString}` : ''}`;
       
-      const response = await api.get(url, {
-        headers: getAuthHeader(),
-      });
-      
+      const response = await api.get(url);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar overview dos treinos:', error);
@@ -255,10 +242,7 @@ export const ReportsService = {
       const queryString = params.toString();
       const url = `/reports/exercise-progress${queryString ? `?${queryString}` : ''}`;
       
-      const response = await api.get(url, {
-        headers: getAuthHeader(),
-      });
-      
+      const response = await api.get(url);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar progresso dos exercícios:', error);
@@ -284,10 +268,7 @@ export const ReportsService = {
       
       const url = `/reports/evolution?${params.toString()}`;
       
-      const response = await api.get(url, {
-        headers: getAuthHeader(),
-      });
-      
+      const response = await api.get(url);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar evolução do exercício:', error);
@@ -308,10 +289,7 @@ export const ReportsService = {
       
       const url = `/reports/frequency?${params.toString()}`;
       
-      const response = await api.get(url, {
-        headers: getAuthHeader(),
-      });
-      
+      const response = await api.get(url);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar frequência dos treinos:', error);
@@ -331,10 +309,7 @@ export const ReportsService = {
       const queryString = params.toString();
       const url = `/reports/muscle-groups${queryString ? `?${queryString}` : ''}`;
       
-      const response = await api.get(url, {
-        headers: getAuthHeader(),
-      });
-      
+      const response = await api.get(url);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar análise dos grupos musculares:', error);
@@ -356,10 +331,7 @@ export const ReportsService = {
       const queryString = params.toString();
       const url = `/reports/volume${queryString ? `?${queryString}` : ''}`;
       
-      const response = await api.get(url, {
-        headers: getAuthHeader(),
-      });
-      
+      const response = await api.get(url);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar análise de volume:', error);
@@ -380,10 +352,7 @@ export const ReportsService = {
       const queryString = params.toString();
       const url = `/reports/personal-records${queryString ? `?${queryString}` : ''}`;
       
-      const response = await api.get(url, {
-        headers: getAuthHeader(),
-      });
-      
+      const response = await api.get(url);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar recordes pessoais:', error);
@@ -403,10 +372,7 @@ export const ReportsService = {
       const queryString = params.toString();
       const url = `/reports/duration${queryString ? `?${queryString}` : ''}`;
       
-      const response = await api.get(url, {
-        headers: getAuthHeader(),
-      });
-      
+      const response = await api.get(url);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar duração dos treinos:', error);
@@ -426,10 +392,7 @@ export const ReportsService = {
       const queryString = params.toString();
       const url = `/reports/consistency${queryString ? `?${queryString}` : ''}`;
       
-      const response = await api.get(url, {
-        headers: getAuthHeader(),
-      });
-      
+      const response = await api.get(url);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar consistência dos treinos:', error);
@@ -452,10 +415,7 @@ export const ReportsService = {
       
       const url = `/reports/compare-exercises?${params.toString()}`;
       
-      const response = await api.get(url, {
-        headers: getAuthHeader(),
-      });
-      
+      const response = await api.get(url);
       return response.data;
     } catch (error) {
       console.error('Erro ao comparar exercícios:', error);
@@ -477,10 +437,7 @@ export const ReportsService = {
       const queryString = params.toString();
       const url = `/reports/strength-analysis${queryString ? `?${queryString}` : ''}`;
       
-      const response = await api.get(url, {
-        headers: getAuthHeader(),
-      });
-      
+      const response = await api.get(url);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar análise de força:', error);
@@ -501,10 +458,7 @@ export const ReportsService = {
       
       const url = `/reports/complete?${params.toString()}`;
       
-      const response = await api.get(url, {
-        headers: getAuthHeader(),
-      });
-      
+      const response = await api.get(url);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar relatório completo:', error);
