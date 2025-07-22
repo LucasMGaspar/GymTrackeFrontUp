@@ -1,46 +1,6 @@
+// src/services/exercise.service.ts
+import api from '@/lib/api';
 import { Exercise, CreateExerciseData, MUSCLE_GROUPS, MuscleGroup } from '@/types/exercise';
-
-const API_BASE_URL = 'https://jcrw8tg1-3000.brs.devtunnels.ms';
-
-const getToken = () => localStorage.getItem('token');
-
-const authenticatedFetch = async (url: string, options: RequestInit = {}) => {
-  const token = getToken();
-
-  if (!token) {
-    throw new Error('Token não encontrado. Faça login novamente.');
-  }
-
-  const headers = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
-    ...options.headers,
-  };
-
-  // LOG ADICIONAL para debug
-  console.log('📤 Request URL:', `${API_BASE_URL}${url}`);
-  console.log('📤 Request body:', options.body);
-
-  const response = await fetch(`${API_BASE_URL}${url}`, {
-    ...options,
-    headers,
-  });
-
-  if (response.status === 401) {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
-    throw new Error('Token expirado');
-  }
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('❌ Erro na requisição:', response.status, errorText);
-    throw new Error(`Erro ${response.status}: ${errorText}`);
-  }
-
-  return response.json();
-};
 
 type ExercisePayload = {
   name: string;
@@ -80,16 +40,13 @@ export const exerciseService = {
       console.log('🔍 Dados recebidos:', data);
 
       const payload = buildPayload(data);
-
       console.log('📤 Payload final:', payload);
 
-      const result = await authenticatedFetch('/exercises', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
+      // ✅ USAR a instância centralizada da API
+      const response = await api.post('/exercises', payload);
 
-      console.log('✅ Exercício criado com sucesso:', result);
-      return result as Exercise;
+      console.log('✅ Exercício criado com sucesso:', response.data);
+      return response.data as Exercise;
     } catch (error) {
       console.error('❌ Erro completo:', error);
       throw error;
@@ -98,7 +55,8 @@ export const exerciseService = {
 
   async getAll(): Promise<Exercise[]> {
     try {
-      return (await authenticatedFetch('/exercises')) as Exercise[];
+      const response = await api.get('/exercises');
+      return response.data as Exercise[];
     } catch (error) {
       console.error('Erro ao buscar exercícios:', error);
       throw error;
@@ -108,7 +66,8 @@ export const exerciseService = {
   async getByMuscleGroups(muscleGroups: string[]): Promise<Exercise[]> {
     try {
       const params = muscleGroups.join(',');
-      return (await authenticatedFetch(`/exercises?muscleGroups=${params}`)) as Exercise[];
+      const response = await api.get(`/exercises?muscleGroups=${params}`);
+      return response.data as Exercise[];
     } catch (error) {
       console.error('Erro ao buscar por grupo muscular:', error);
       throw error;
@@ -117,7 +76,8 @@ export const exerciseService = {
 
   async getById(id: string): Promise<Exercise> {
     try {
-      return (await authenticatedFetch(`/exercises/${id}`)) as Exercise;
+      const response = await api.get(`/exercises/${id}`);
+      return response.data as Exercise;
     } catch (error) {
       console.error('Erro ao buscar exercício:', error);
       throw error;
@@ -145,10 +105,8 @@ export const exerciseService = {
         payload.instructions = data.instructions.trim();
       }
 
-      return (await authenticatedFetch(`/exercises/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(payload),
-      })) as Exercise;
+      const response = await api.put(`/exercises/${id}`, payload);
+      return response.data as Exercise;
     } catch (error) {
       console.error('Erro ao atualizar exercício:', error);
       throw error;
@@ -157,9 +115,7 @@ export const exerciseService = {
 
   async delete(id: string): Promise<void> {
     try {
-      await authenticatedFetch(`/exercises/${id}`, {
-        method: 'DELETE',
-      });
+      await api.delete(`/exercises/${id}`);
     } catch (error) {
       console.error('Erro ao deletar exercício:', error);
       throw error;
