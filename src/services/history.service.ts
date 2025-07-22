@@ -240,7 +240,7 @@ export class HistoryService {
   }
 
   // ✅ CORREÇÃO: Duplicar treino
-  static async duplicateWorkout(workoutId: string): Promise<{ id: string; message: string; newWorkout: any }> {
+  static async duplicateWorkout(workoutId: string): Promise<{ id: string; message: string; newWorkout: WorkoutHistoryItem }> {
     try {
       const response = await api.get(`/history/${workoutId}/duplicate`);
       return response.data;
