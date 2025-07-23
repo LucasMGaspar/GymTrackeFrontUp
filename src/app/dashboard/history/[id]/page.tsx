@@ -13,10 +13,7 @@ import {
   User,
   LogOut,
   ChevronRight,
-  ArrowLeft,
-  CheckCircle,
-  XCircle,
-  Pause,
+  Zap,
   BarChart3,
   Dumbbell,
   Copy,
@@ -25,7 +22,14 @@ import {
   Weight,
   RotateCcw,
   Star,
-  MessageCircle
+  MessageCircle,
+  CheckCircle,
+  XCircle,
+  Pause,
+  ArrowLeft,
+  Menu,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 interface WorkoutDetails {
@@ -81,6 +85,9 @@ function WorkoutDetailsContent() {
   const [workout, setWorkout] = useState<WorkoutDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
 
   const loadWorkoutDetails = useCallback(async () => {
     try {
@@ -139,13 +146,13 @@ function WorkoutDetailsContent() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'COMPLETED':
-        return <CheckCircle className="h-6 w-6 text-green-600" />;
+        return <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />;
       case 'CANCELLED':
-        return <XCircle className="h-6 w-6 text-red-600" />;
+        return <XCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />;
       case 'IN_PROGRESS':
-        return <Pause className="h-6 w-6 text-blue-600" />;
+        return <Pause className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />;
       default:
-        return <Activity className="h-6 w-6 text-gray-400" />;
+        return <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400" />;
     }
   };
 
@@ -194,7 +201,7 @@ function WorkoutDetailsContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Carregando detalhes do treino...</p>
@@ -205,21 +212,22 @@ function WorkoutDetailsContent() {
 
   if (error || !workout) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
           <div className="w-16 h-16 bg-red-100 rounded-xl flex items-center justify-center mx-auto mb-4">
             <XCircle className="h-8 w-8 text-red-600" />
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">Erro ao carregar treino</h3>
           <p className="text-gray-600 mb-6">{error || 'Treino não encontrado'}</p>
-          <div className="space-x-3">
+          <div className="space-y-3">
             <Button
               variant="secondary"
               onClick={() => router.push('/dashboard/history')}
+              className="w-full"
             >
               Voltar ao Histórico
             </Button>
-            <Button onClick={loadWorkoutDetails}>
+            <Button onClick={loadWorkoutDetails} className="w-full">
               Tentar Novamente
             </Button>
           </div>
@@ -230,17 +238,22 @@ function WorkoutDetailsContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Header Mobile */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">GT</span>
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xs sm:text-sm">GT</span>
               </div>
-              <h1 className="text-xl font-bold text-gray-900">Gym Tracker</h1>
+              <h1 className="text-sm sm:text-xl font-bold text-gray-900">
+                <span className="hidden sm:inline">Gym Tracker</span>
+                <span className="sm:hidden">GT</span>
+              </h1>
             </div>
-            <div className="flex items-center space-x-4">
+            
+            {/* Desktop Menu */}
+            <div className="hidden md:flex items-center space-x-4">
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <User className="h-4 w-4" />
                 <span>{user?.name || 'Usuário'}</span>
@@ -255,14 +268,46 @@ function WorkoutDetailsContent() {
                 <span>Sair</span>
               </Button>
             </div>
+
+            {/* Mobile Menu */}
+            <div className="md:hidden">
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
+
+          {/* Mobile Menu Dropdown */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-gray-200 bg-white pb-4">
+              <div className="px-4 py-3 space-y-3">
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <User className="h-4 w-4" />
+                  <span>{user?.name || 'Usuário'}</span>
+                </div>
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  onClick={logout}
+                  className="w-full justify-center flex items-center space-x-1"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sair</span>
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex mb-6" aria-label="Breadcrumb">
-          <ol className="flex items-center space-x-2">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Breadcrumb Mobile */}
+        <nav className="flex mb-4 sm:mb-6 overflow-x-auto" aria-label="Breadcrumb">
+          <ol className="flex items-center space-x-2 text-sm whitespace-nowrap">
             <li>
               <button 
                 onClick={() => router.push('/dashboard')}
@@ -286,13 +331,13 @@ function WorkoutDetailsContent() {
               <ChevronRight className="h-4 w-4 text-gray-400" />
             </li>
             <li>
-              <span className="text-gray-900 font-medium">Detalhes do Treino</span>
+              <span className="text-gray-900 font-medium">Detalhes</span>
             </li>
           </ol>
         </nav>
 
         {/* Botão Voltar */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <Button
             variant="secondary"
             onClick={() => router.push('/dashboard/history')}
@@ -303,16 +348,16 @@ function WorkoutDetailsContent() {
           </Button>
         </div>
 
-        {/* Header do Treino */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center">
+        {/* Header do Treino Mobile */}
+        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-xl flex items-center justify-center">
                 {getStatusIcon(workout.status)}
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{workout.dayOfWeek}</h1>
-                <p className="text-gray-600">
+                <h1 className="text-lg sm:text-2xl font-bold text-gray-900">{workout.dayOfWeek}</h1>
+                <p className="text-sm sm:text-base text-gray-600">
                   {new Date(workout.date).toLocaleDateString('pt-BR', {
                     weekday: 'long',
                     year: 'numeric',
@@ -320,8 +365,8 @@ function WorkoutDetailsContent() {
                     day: 'numeric'
                   })}
                 </p>
-                <div className="flex items-center space-x-2 mt-2">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(workout.status)}`}>
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 mt-2">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(workout.status)} w-fit`}>
                     {getStatusText(workout.status)}
                   </span>
                   <span className="text-sm text-gray-500">
@@ -331,12 +376,12 @@ function WorkoutDetailsContent() {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
               {workout.status === 'COMPLETED' && (
                 <Button
                   variant="secondary"
                   onClick={handleDuplicateWorkout}
-                  className="flex items-center space-x-1"
+                  className="flex items-center justify-center space-x-1"
                 >
                   <Copy className="h-4 w-4" />
                   <span>Duplicar Treino</span>
@@ -347,7 +392,7 @@ function WorkoutDetailsContent() {
                 <Button
                   variant="secondary"
                   onClick={handleDeleteWorkout}
-                  className="flex items-center space-x-1 text-red-600 hover:text-red-700"
+                  className="flex items-center justify-center space-x-1 text-red-600 hover:text-red-700"
                 >
                   <Trash2 className="h-4 w-4" />
                   <span>Deletar</span>
@@ -357,7 +402,7 @@ function WorkoutDetailsContent() {
           </div>
 
           {workout.notes && (
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-gray-50 rounded-lg p-4 mt-4">
               <div className="flex items-start space-x-2">
                 <MessageCircle className="h-5 w-5 text-gray-400 mt-0.5" />
                 <div>
@@ -369,100 +414,123 @@ function WorkoutDetailsContent() {
           )}
         </div>
 
-        {/* Estatísticas do Treino */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Exercícios</p>
-                <p className="text-2xl font-bold text-gray-900">{workout.stats.completedExercises}/{workout.stats.totalExercises}</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <Dumbbell className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
+        {/* Estatísticas do Treino - Mobile Collapsible */}
+        <div className="mb-6 sm:mb-8">
+          <div className="md:hidden mb-4">
+            <Button
+              variant="secondary"
+              onClick={() => setShowStats(!showStats)}
+              className="w-full flex items-center justify-between"
+            >
+              <span>Ver Estatísticas</span>
+              {showStats ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total de Séries</p>
-                <p className="text-2xl font-bold text-gray-900">{workout.stats.totalSeries}</p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <Target className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Volume Total</p>
-                <p className="text-2xl font-bold text-gray-900">{workout.stats.totalVolume.toLocaleString()}kg</p>
-              </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                <BarChart3 className="h-6 w-6 text-purple-600" />
+          <div className={`grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 ${showStats ? 'block' : 'hidden md:grid'}`}>
+            <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div className="mb-2 sm:mb-0">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">Exercícios</p>
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">{workout.stats.completedExercises}/{workout.stats.totalExercises}</p>
+                </div>
+                <div className="w-8 h-8 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center ml-auto sm:ml-0">
+                  <Dumbbell className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Duração</p>
-                <p className="text-2xl font-bold text-gray-900">{workout.stats.duration}min</p>
-              </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                <Clock className="h-6 w-6 text-orange-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Médias */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-sm border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Peso Médio</h3>
-            <div className="flex items-center space-x-3">
-              <Weight className="h-8 w-8 text-indigo-600" />
-              <div>
-                <p className="text-3xl font-bold text-gray-900">{workout.stats.averageWeight}kg</p>
-                <p className="text-sm text-gray-500">Por série</p>
+            <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div className="mb-2 sm:mb-0">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">Total de Séries</p>
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">{workout.stats.totalSeries}</p>
+                </div>
+                <div className="w-8 h-8 sm:w-12 sm:h-12 bg-green-100 rounded-xl flex items-center justify-center ml-auto sm:ml-0">
+                  <Target className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Repetições Médias</h3>
-            <div className="flex items-center space-x-3">
-              <RotateCcw className="h-8 w-8 text-pink-600" />
-              <div>
-                <p className="text-3xl font-bold text-gray-900">{workout.stats.averageReps}</p>
-                <p className="text-sm text-gray-500">Por série</p>
+            <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div className="mb-2 sm:mb-0">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">Volume Total</p>
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">{workout.stats.totalVolume.toLocaleString()}kg</p>
+                </div>
+                <div className="w-8 h-8 sm:w-12 sm:h-12 bg-purple-100 rounded-xl flex items-center justify-center ml-auto sm:ml-0">
+                  <BarChart3 className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div className="mb-2 sm:mb-0">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">Duração</p>
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">{workout.stats.duration}min</p>
+                </div>
+                <div className="w-8 h-8 sm:w-12 sm:h-12 bg-orange-100 rounded-xl flex items-center justify-center ml-auto sm:ml-0">
+                  <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-orange-600" />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Lista de Exercícios */}
-        <div className="space-y-6">
+        {/* Médias - Mobile Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Peso Médio</h3>
+            <div className="flex items-center space-x-3">
+              <Weight className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600" />
+              <div>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{workout.stats.averageWeight}kg</p>
+                <p className="text-sm text-gray-500">Por série</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Repetições Médias</h3>
+            <div className="flex items-center space-x-3">
+              <RotateCcw className="h-6 w-6 sm:h-8 sm:w-8 text-pink-600" />
+              <div>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{workout.stats.averageReps}</p>
+                <p className="text-sm text-gray-500">Por série</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Lista de Exercícios - Mobile Accordion */}
+        <div className="space-y-4 sm:space-y-6">
           {workout.exerciseExecutions
             .sort((a, b) => a.order - b.order)
             .map((exerciseExecution, index) => (
             <div key={exerciseExecution.id} className="bg-white rounded-xl shadow-sm border">
-              {/* Header do Exercício */}
-              <div className="p-6 border-b border-gray-200">
+              {/* Header do Exercício - Mobile Clickable */}
+              <div 
+                className="p-4 sm:p-6 border-b border-gray-200 cursor-pointer md:cursor-default"
+                onClick={() => {
+                  const isMobile = window.innerWidth < 768;
+                  if (isMobile) {
+                    setExpandedExercise(
+                      expandedExercise === exerciseExecution.id ? null : exerciseExecution.id
+                    );
+                  }
+                }}
+              >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <span className="text-blue-600 font-bold">{index + 1}</span>
+                  <div className="flex items-center space-x-3 sm:space-x-4">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <span className="text-blue-600 font-bold text-sm sm:text-base">{index + 1}</span>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                         {exerciseExecution.exerciseName}
                       </h3>
-                      <div className="flex items-center space-x-4 text-sm text-gray-600">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
                         <span>{exerciseExecution.seriesExecutions.length} séries</span>
                         {exerciseExecution.exercise.equipment && (
                           <span>• {exerciseExecution.exercise.equipment}</span>
@@ -483,25 +551,31 @@ function WorkoutDetailsContent() {
                         Incompleto
                       </span>
                     )}
+                    <div className="md:hidden">
+                      {expandedExercise === exerciseExecution.id ? 
+                        <ChevronUp className="h-4 w-4 text-gray-400" /> : 
+                        <ChevronDown className="h-4 w-4 text-gray-400" />
+                      }
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Séries */}
-              <div className="p-6">
+              {/* Séries - Mobile Collapsible */}
+              <div className={`p-4 sm:p-6 ${expandedExercise === exerciseExecution.id || window.innerWidth >= 768 ? 'block' : 'hidden'}`}>
                 {exerciseExecution.seriesExecutions.length > 0 ? (
                   <div className="space-y-3">
                     <h4 className="text-sm font-medium text-gray-700 mb-3">Séries Realizadas:</h4>
                     {exerciseExecution.seriesExecutions
                       .sort((a, b) => a.seriesNumber - b.seriesNumber)
                       .map((series) => (
-                      <div key={series.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center space-x-6">
+                      <div key={series.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-gray-50 rounded-lg space-y-3 sm:space-y-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-6">
                           <span className="text-sm font-medium text-gray-600 min-w-[60px]">
                             Série {series.seriesNumber}
                           </span>
                           
-                          <div className="flex items-center space-x-4">
+                          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                             <div className="flex items-center space-x-2">
                               <Weight className="h-4 w-4 text-gray-400" />
                               <span className="text-sm font-bold text-gray-900">{series.weight}kg</span>
@@ -521,8 +595,8 @@ function WorkoutDetailsContent() {
                           </div>
                         </div>
 
-                        <div className="flex items-center space-x-4">
-                          <div className="text-right">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+                          <div className="text-left sm:text-right">
                             <div className="text-sm font-bold text-blue-600">
                               {(series.weight * series.reps).toLocaleString()}kg
                             </div>
@@ -530,7 +604,7 @@ function WorkoutDetailsContent() {
                           </div>
 
                           {series.difficulty && (
-                            <div className="flex flex-col items-center">
+                            <div className="flex flex-col items-start sm:items-center mt-2 sm:mt-0">
                               <div className="text-xs text-gray-500 mb-1">dificuldade</div>
                               {getDifficultyStars(series.difficulty)}
                             </div>
@@ -554,9 +628,9 @@ function WorkoutDetailsContent() {
                     )}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <Target className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                    <p>Nenhuma série registrada para este exercício</p>
+                  <div className="text-center py-6 sm:py-8 text-gray-500">
+                    <Target className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 text-gray-400" />
+                    <p className="text-sm sm:text-base">Nenhuma série registrada para este exercício</p>
                   </div>
                 )}
               </div>
@@ -564,28 +638,28 @@ function WorkoutDetailsContent() {
           ))}
         </div>
 
-        {/* Informações de Tempo */}
+        {/* Informações de Tempo - Mobile Layout */}
         {workout.startTime && (
-          <div className="mt-8 bg-white rounded-xl p-6 shadow-sm border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Informações de Tempo</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div>
+          <div className="mt-6 sm:mt-8 bg-white rounded-xl p-4 sm:p-6 shadow-sm border">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Informações de Tempo</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+              <div className="flex justify-between sm:block">
                 <span className="text-gray-600">Início:</span>
-                <span className="ml-2 font-medium">
+                <span className="ml-2 sm:ml-0 font-medium">
                   {new Date(workout.startTime).toLocaleTimeString('pt-BR')}
                 </span>
               </div>
               {workout.endTime && (
-                <div>
+                <div className="flex justify-between sm:block">
                   <span className="text-gray-600">Fim:</span>
-                  <span className="ml-2 font-medium">
+                  <span className="ml-2 sm:ml-0 font-medium">
                     {new Date(workout.endTime).toLocaleTimeString('pt-BR')}
                   </span>
                 </div>
               )}
-              <div>
+              <div className="flex justify-between sm:block">
                 <span className="text-gray-600">Duração:</span>
-                <span className="ml-2 font-medium">{workout.stats.duration} minutos</span>
+                <span className="ml-2 sm:ml-0 font-medium">{workout.stats.duration} minutos</span>
               </div>
             </div>
           </div>
