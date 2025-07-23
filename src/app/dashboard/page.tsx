@@ -1,3 +1,5 @@
+// src/app/dashboard/page.tsx
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -24,6 +26,29 @@ import {
   FileText,
   Menu
 } from 'lucide-react';
+
+// ✅ FUNÇÃO AUXILIAR PARA CORRIGIR A DATA
+const formatDateCorrectly = (dateString: string | Date): string => {
+  const date = new Date(dateString);
+  
+  // Adicionar um dia para compensar a conversão UTC
+  const correctedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+  
+  return correctedDate.toLocaleDateString('pt-BR');
+};
+
+// ✅ FUNÇÃO PARA VERIFICAR SE É HOJE
+const isTodayBrazil = (dateString: string | Date): boolean => {
+  const date = new Date(dateString);
+  const correctedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+  const today = new Date();
+  
+  return (
+    correctedDate.getDate() === today.getDate() &&
+    correctedDate.getMonth() === today.getMonth() &&
+    correctedDate.getFullYear() === today.getFullYear()
+  );
+};
 
 export default function DashboardPage() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -381,7 +406,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Recent Workouts - responsivo */}
+        {/* Recent Workouts - responsivo COM CORREÇÃO DA DATA */}
         <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-2 sm:space-y-0">
             <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
@@ -424,7 +449,13 @@ export default function DashboardPage() {
                           {workout.dayOfWeek}
                         </span>
                         <span className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-0">
-                          {new Date(workout.date).toLocaleDateString('pt-BR')}
+                          {/* ✅ CORREÇÃO APLICADA AQUI */}
+                          {formatDateCorrectly(workout.date)}
+                          {isTodayBrazil(workout.date) && (
+                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              Hoje
+                            </span>
+                          )}
                         </span>
                       </div>
                       <div className="text-xs sm:text-sm text-gray-600 mt-1">
